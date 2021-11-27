@@ -5,10 +5,10 @@
 # R version 4.1.2 (2021-11-01)
 
 library(tidyverse)  # Version 1.3.1
-source('util.R')
+source('utils.R')
 
 # Import data -------------------------------------------------------------
-fpath <- 'Greta_150921_Mousecells_VHLKO -  Quantification Summary_CLEARNAMES.csv'
+fpath <- 'data/Greta_150921_Mousecells_VHLKO -  Quantification Summary_CLEARNAMES.csv'
 
 dat_raw <- 
   read_csv(fpath) %>% 
@@ -33,7 +33,6 @@ warning(blanks_message)
 corrupt_blanks <- filter(blanks, !is.na(cq))
 
 dat <- filter(dat_raw, !str_detect(content, blank_tag))
-
 
 
 # Clean up and average Cqs ------------------------------------------------
