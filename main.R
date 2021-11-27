@@ -59,9 +59,6 @@ if (nrow(high_sd_samples) > 0) {
 }
 
 
-
-
-
 # Calculate rel. gene exp. ------------------------------------------------
 
 housek <- 'ANXA5'
@@ -76,53 +73,4 @@ rel_gene_expr <-
 # Split label -------------------------------------------------------------
 
 dat_final <- split_label(rel_gene_expr, 'sample')
-
-
-# ddCq --------------------------------------------------------------------
-calc_ddcq <- function(.df, .ctrl_grp, .gmean = FALSE) {
-  # Calculate the mean of the control group first and then the ddcq
-  # ∆∆Ct = ∆Ct (Sample) – ∆Ct (Control average)
-  ctr_grp_avgs <- 
-    .df %>% 
-    filter(str_detect(sample, .ctrl_grp)) %>% 
-    group_by(target) %>% 
-    summarise(mean_ctrl_dcq = if_else(T, 
-                                      prod(dcq)^(1/length(dcq)),
-                                      mean(dcq)),
-              sd_ctrl_dcq = sd(dcq))
-  
-  dat1 %>% 
-    group_nest(target) %>% 
-    full_join(., ctr_grp_avgs) %>% 
-    select(-sd_ctrl_dcq) %>% 
-    unnest(data) %>% 
-    mutate(ddcq = dcq - mean_ctrl_dcq)
-}
-
-# calculate mean_ctrl_dcqs
-mean_ctrl_dcqs <-
-  dat1 %>% 
-  filter(str_detect(sample, ctrl_grp)) %>% 
-  group_by(target) %>% 
-  summarise(mean_ctrl_dcq = if_else(F, 
-                                    prod(dcq)^(1/length(dcq)),
-                                    mean(dcq)),
-            sd_ctrl_dcq = sd(dcq))
-
-dat1 %>% 
-  group_nest(target) %>% 
-  full_join(., mean_ctrl_dcqs) %>% 
-  # A) simple
-  select(-sd_ctrl_dcq) %>% 
-  unnest(data) %>% 
-  mutate(ddcq = dcq - mean_ctrl_dcq) %>% 
-  select(-mean_ctrl_dcq)
-  # B) complex
-  # mutate(data = map2(data, 
-  #                    mean_ctrl_dcq, 
-  #                    # ~`-`(pluck(.x, 'dcq'), .y))) %>% 
-  #                    ~mutate(.x, ddct = dcq - .y))) %>% 
-  # select(-mean_ctrl_dcq, -sd_ctrl_dcq) %>% 
-  # unnest(data)
-
 

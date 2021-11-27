@@ -17,7 +17,7 @@ split_label <- function(.df, .col) {
 
 calc_dcq <- function(.df, .housek) {
   # Calculate dct values in a long format tibble
-  # .df (dataframe): dataframe that already contains averaged Cq values
+  # .df (dataframe): contains averaged Cq values
   # .housek (chr): name of housekeeper gene
   
   housek_cqs <- 
@@ -32,4 +32,28 @@ calc_dcq <- function(.df, .housek) {
     mutate(dcq = mean_cq - mean_housek_cq) %>% 
     select(-mean_housek_cq) %>% 
     filter(target != .housek)
+}
+
+
+calc_ddcq <- function(.df, .ctrl_grp, .gmean = FALSE) {
+  # Calculate the mean of the control group first and then the ddcq
+  # ∆∆Ct = ∆Ct (Sample) – ∆Ct (Control average)
+  # .df (dataframe): contains dCq values
+  # .ctrl_grp (chr): name of control group
+  # .gmean (lgl): use arithmetic or geometric mean to calculate ctrl_grp_avg?
+  ctr_grp_avgs <- 
+    .df %>% 
+    filter(str_detect(sample, .ctrl_grp)) %>% 
+    group_by(target) %>% 
+    summarise(mean_ctrl_dcq = if_else(T, 
+                                      prod(dcq)^(1/length(dcq)),
+                                      mean(dcq)),
+              sd_ctrl_dcq = sd(dcq))
+  
+  dat1 %>% 
+    group_nest(target) %>% 
+    full_join(., ctr_grp_avgs) %>% 
+    select(-sd_ctrl_dcq) %>% 
+    unnest(data) %>% 
+    mutate(ddcq = dcq - mean_ctrl_dcq)
 }
