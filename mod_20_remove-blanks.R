@@ -42,6 +42,7 @@ blanksServer <- function(id, .dat_raw) {
     
     # Save table of corrupt blanks, if detected
     blanks_table <- eventReactive(input$check_blanks, {
+      validate(need(nrow(blanks()) != 0, ''))
       filter(blanks(), !is.na(cq))
       })
     
