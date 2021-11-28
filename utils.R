@@ -50,7 +50,7 @@ calc_ddcq <- function(.df, .ctrl_grp, .gmean = FALSE) {
                                       mean(dcq)),
               sd_ctrl_dcq = sd(dcq))
   
-  dat1 %>% 
+  .df %>% 
     group_nest(target) %>% 
     full_join(., ctr_grp_avgs) %>% 
     select(-sd_ctrl_dcq) %>% 
