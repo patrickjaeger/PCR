@@ -1,7 +1,7 @@
 # Different PCR machine machines deliver different file formats and
 # formatting. Here the user selects his machine to ensure consistent
 # data import.
-# TODO Finish read_96()
+# TODO Finish read_96() - cq is still character
 # TODO Add error message if file format is incompatible
 
 
@@ -27,10 +27,10 @@ importServer <- function(id) {
     
     reactive({
       req(input$file)
-      input$file$datapath %>% 
-        if_else(input$machine == '384-well beast',
-                read_384(.),
-                read_96(.))
+      if (input$machine == '384-well beast')
+        read_384(input$file$datapath)
+      # if (input$machine == '96-well old-school')
+      #   read_96(input$file$datapath)
     })
     
   })
@@ -44,14 +44,32 @@ read_384 <- function(.fpath) {
   .fpath %>% 
     read_csv() %>% 
     select(Well, Target, Content, Sample, Cq) %>%
-    rename_with(tolower)
+    rename_with(tolower) %>% 
+    mutate(target = toupper(target))
 }
 
 read_96 <- function(.fpath) {
-  # Read CSV containing Cq values from 96-well PCR machine
-  # TODO Write function :O
-  # .fpath %>% 
-  #   read_csv() %>% 
-  #   select(Well, Target, Content, Sample, Cq) %>%
-  #   rename_with(tolower)
+  # Read the .xls file and cut the garbage from
+  # the beginning and end
+  readxl::read_xls(.fpath, skip = 7) %>% 
+    slice(1:(nrow(.)-5)) %>% 
+    select(Well, `Sample Name`, `Target Name`, `C<U+0442>`) %>% 
+    rename(well = Well, sample = `Sample Name`, target = `Target Name`, 
+           cq = `C<U+0442>`) %>% 
+    mutate(cq = as.character(cq))
 }
+
+
+# TestApp -----------------------------------------------------------------
+
+# importApp <- function() {
+#   ui <- fluidPage(
+#     importUI('file1')
+#   )
+#   server <- function(input, output, session) {
+#     dat_raw <- importServer('file1')
+#   }
+#   shinyApp(ui, server)  
+# }
+# 
+# importApp()
