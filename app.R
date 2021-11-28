@@ -4,27 +4,19 @@ library(shiny)
 source('utils.R')
 source('mod_10_import.R')
 source('mod_20_remove-blanks.R')
+source('mod_30_check-tech-replicats.R')
 
 ui <- navbarPage(
   'PCRmate',
   
   tabPanel('Upload',
            mainPanel(
+             
              importUI('file1'),
              
              blanksUI('blank1'),
-             
-             h3('Calculate Stuff'),
-             selectInput('housek', 
-                         'Select housekeeper:',
-                         choices = c()),
-             selectInput('ctrl',
-                         'Select control group:',
-                         choices = c(),),
-             actionButton('calculate', 'Calculate Relative Gene Expression'),
-             downloadButton('d_res_long', 'Download Results (long format)'),
-             downloadButton('d_res_wide', 'Download Results (wide format)'),
-             tableOutput('head_res_long'),
+             replicatesUI('rep1'),
+             # calculationUI('calc1'),
              
              h3('Extract Tags'),
              textInput('tags', 
@@ -45,10 +37,10 @@ ui <- navbarPage(
 )
 
 server <- function(input, output, session) {
-  dat_raw <- importServer('file1')
-  dat <- blanksServer('blank1', dat_raw)
-  
-  # observeEvent(dat_raw(), print(dat_raw()))
+  dat1 <- importServer('file1')
+  dat2 <- blanksServer('blank1', dat1)
+  dat3 <- replicatesServer('rep1', dat2)
+  # observeEvent(dat3(), print(dat3()))
   
   
 }
