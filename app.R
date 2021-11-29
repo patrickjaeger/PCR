@@ -40,7 +40,7 @@ server <- function(input, output, session) {
   dat1 <- importServer('file1')
   dat2 <- blanksServer('blank1', dat1)
   dat3 <- replicatesServer('rep1', dat2)
-  # observeEvent(dat3(), print(dat3()))
+  observeEvent(dat3(), print('fu'))
   
   
 }
