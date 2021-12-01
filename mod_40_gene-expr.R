@@ -1,4 +1,7 @@
-# 
+# Calculate stuff
+
+
+# Modules -----------------------------------------------------------------
 
 calculationUI <- function(id) {
   tagList(
@@ -50,12 +53,14 @@ calculationServer <- function(id, .dat) {
       
       if (pass()) {
         shinyFeedback::hideFeedback('ctrl_grp')
-        shinyFeedback::showFeedbackSuccess('ctrl_grp', "Entry matched")
+        shinyFeedback::showFeedbackSuccess('ctrl_grp', 
+                                           "Entry matched")
         shinyjs::enable('d_res_long')
         shinyjs::enable('d_res_wide')
       } else {
         shinyFeedback::hideFeedback('ctrl_grp')
-        shinyFeedback::showFeedbackWarning('ctrl_grp', "Entry not found")
+        shinyFeedback::showFeedbackWarning('ctrl_grp', 
+                                           "Entry not found")
         shinyjs::disable('d_res_long')
         shinyjs::disable('d_res_wide')
       }

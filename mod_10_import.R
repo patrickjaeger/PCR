@@ -1,4 +1,4 @@
-# Different PCR machine machines deliver different file formats and
+# Different PCR machines deliver different file formats and
 # formatting. Here the user selects his machine to ensure consistent
 # data import.
 # TODO Finish read_96() - cq is still character
