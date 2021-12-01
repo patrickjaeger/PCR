@@ -2,19 +2,29 @@
 
 calculationUI <- function(id) {
   tagList(
+    shinyjs::useShinyjs(),
     shinyFeedback::useShinyFeedback(),
+
     h3('Calculate Stuff'),
     selectInput(NS(id, 'housek'), 
                 'Select housekeeper:',
                 choices = c()),
     strong('Enter name of control group (case sensitive):'),
     textInput(NS(id, 'ctrl_grp'), NULL),
-    # actionButton(NS(id, 'check_ctrl_grp'), 'Validate control group'), 
     actionButton(NS(id, 'calculate'), 
-                 'Calculate Relative Gene Expression'), br(),
-    downloadButton(NS(id, 'd_res_long'), 'Download Results (long format)'),
-    downloadButton(NS(id, 'd_res_wide'), 'Download Results (wide format)'),
-    tableOutput(NS(id, 'head_res_long'))
+                 'Calculate Relative Gene Expression', 
+                 width = '300px'), br(),
+    actionButton(NS(id, 'b1'), 'fu'),
+    disabled(
+      downloadButton(NS(id, 'd_res_long'), 
+                     'Download Results (long format)', 
+                     style = 'width:300px'), br(),
+      downloadButton(NS(id, 'd_res_wide'), 
+                     'Download Results (wide format*)', 
+                     style = 'width:300px')
+    ), br(),
+    p('*Contains only fold change.'),
+    tableOutput(NS(id, 'head_res_long')), br()
     
   )
 }
@@ -49,17 +59,74 @@ calculationServer <- function(id, .dat) {
     # Calculate gene expression
     rel_gene_expr <- eventReactive(input$calculate, {
       req(ctrl_grp())
-
+      
       .dat() %>% 
         calc_dcq(input$housek) %>% 
         calc_ddcq_and_fold_change(ctrl_grp())
     })
     
-    # Render head of 
+    # Render head of results
     output$head_res_long <- renderTable({
       head(rel_gene_expr())
     })
     
+    # Wide format results
+    rel_gene_expr_wide <- reactive({
+      req(rel_gene_expr())
+      rel_gene_expr() %>% 
+        select(target, sample, fold_change) %>% 
+        pivot_wider(names_from = target, 
+                    values_from = fold_change)
+    })
+    
+    # Download long results
+    output$d_res_long <- downloadHandler(
+      filename = function() {
+        paste0('rel_gene_expression', ".csv")
+      },
+      content = function(file) {
+        write_csv(rel_gene_expr(), file)
+      }
+    )
+    
+    # Download wide results
+    output$d_res_wide <- downloadHandler(
+      filename = function() {
+        paste0('rel_gene_expression_wide', ".csv")
+      },
+      content = function(file) {
+        write_csv(rel_gene_expr_wide(), file)
+      }
+    )
+    
+    observeEvent(pass(), {
+      if (pass) {
+        enable('d_res_long')
+        enable('d_res_wide')
+      } else {
+          disable('d_res_long')
+          disable('d_res_wide')
+        }
+      }) 
+    
+    # observe({
+      # print(rel_gene_expr())
+      
+      # observeEvent( rel_gene_expr(), {
+      #   # shinyjs::toggleState('d_res_long')
+      #   # print(exists(rel_gene_expr()))
+      #   
+      #   shinyjs::toggleState('d_res_long')
+      # })
+      
+      # if (nrow(rel_gene_expr()) == 0) {
+      #   disable('d_res_long')
+      #   disable('d_res_wide')
+      # } else {
+      #   enable('d_res_long')
+      #   enable('d_res_wide')
+      # }
+    # })
     
   })
 }
