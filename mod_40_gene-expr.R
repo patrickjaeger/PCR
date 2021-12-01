@@ -2,19 +2,28 @@
 
 calculationUI <- function(id) {
   tagList(
+    shinyjs::useShinyjs(),
     shinyFeedback::useShinyFeedback(),
+    
     h3('Calculate Stuff'),
     selectInput(NS(id, 'housek'), 
                 'Select housekeeper:',
                 choices = c()),
     strong('Enter name of control group (case sensitive):'),
     textInput(NS(id, 'ctrl_grp'), NULL),
-    # actionButton(NS(id, 'check_ctrl_grp'), 'Validate control group'), 
     actionButton(NS(id, 'calculate'), 
-                 'Calculate Relative Gene Expression'), br(),
-    downloadButton(NS(id, 'd_res_long'), 'Download Results (long format)'),
-    downloadButton(NS(id, 'd_res_wide'), 'Download Results (wide format)'),
-    tableOutput(NS(id, 'head_res_long'))
+                 'Calculate Relative Gene Expression', 
+                 width = '300px'), br(),
+    disabled(
+      downloadButton(NS(id, 'd_res_long'), 
+                     'Download Results (long format)', 
+                     style = 'width:300px'), br(),
+      downloadButton(NS(id, 'd_res_wide'), 
+                     'Download Results (wide format*)', 
+                     style = 'width:300px')
+    ), br(),
+    p('*Contains only fold change.'),
+    tableOutput(NS(id, 'head_res_long')), br()
     
   )
 }
@@ -25,41 +34,78 @@ calculationServer <- function(id, .dat) {
     
     # Update housekeeper selection
     observeEvent(.dat(), {
-      updateSelectInput(inputId = 'housek', choices = unique(.dat()$target))
+      updateSelectInput(inputId = 'housek', 
+                        choices = unique(.dat()$target))
     })
     
-    # Check and save control group
-    ctrl_grp <- reactive({
-      shinyFeedback::feedbackWarning('ctrl_grp', 
+    # Check whether ctrl_grp is in sample
+    ctrl_grp <- reactive(input$ctrl_grp)
+    pass <- reactive(sum(str_detect(.dat()$sample, input$ctrl_grp)) > 0)
+    
+    # Give feedback on ctrl_grp and toggle download
+    observeEvent(input$calculate, {
+      shinyFeedback::feedbackWarning('ctrl_grp',
                                      str_length(input$ctrl_grp) == 0, '-_-')
       req(!str_length(input$ctrl_grp) == 0, cancelOutput = TRUE)
       
-      pass <- sum(str_detect(.dat()$sample, input$ctrl_grp)) > 0
-      
-      if (pass) {
+      if (pass()) {
         shinyFeedback::hideFeedback('ctrl_grp')
         shinyFeedback::showFeedbackSuccess('ctrl_grp', "Entry matched")
-        input$ctrl_grp
+        shinyjs::enable('d_res_long')
+        shinyjs::enable('d_res_wide')
       } else {
         shinyFeedback::hideFeedback('ctrl_grp')
         shinyFeedback::showFeedbackWarning('ctrl_grp', "Entry not found")
+        shinyjs::disable('d_res_long')
+        shinyjs::disable('d_res_wide')
       }
+      
     })
     
     # Calculate gene expression
     rel_gene_expr <- eventReactive(input$calculate, {
-      req(ctrl_grp())
-
+      req(pass(), ctrl_grp())
+      
       .dat() %>% 
         calc_dcq(input$housek) %>% 
         calc_ddcq_and_fold_change(ctrl_grp())
     })
     
-    # Render head of 
+    # Render head of results
     output$head_res_long <- renderTable({
       head(rel_gene_expr())
     })
     
+    # Wide format results
+    rel_gene_expr_wide <- reactive({
+      req(rel_gene_expr())
+      rel_gene_expr() %>% 
+        select(target, sample, fold_change) %>% 
+        pivot_wider(names_from = target, 
+                    values_from = fold_change)
+    })
+    
+    # Download long results
+    output$d_res_long <- downloadHandler(
+      filename = function() {
+        paste0('rel_gene_expression', ".csv")
+      },
+      content = function(file) {
+        write_csv(rel_gene_expr(), file)
+      }
+    )
+    
+    # Download wide results
+    output$d_res_wide <- downloadHandler(
+      filename = function() {
+        paste0('rel_gene_expression_wide', ".csv")
+      },
+      content = function(file) {
+        write_csv(rel_gene_expr_wide(), file)
+      }
+    )
+    
+    return(rel_gene_expr)
     
   })
 }
