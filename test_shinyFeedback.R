@@ -45,22 +45,48 @@ textFeedbackApp <- function() {
   
   server <- function(input, output, session) {
     
-    # valid_text_input <- c('a', 'fu')
-    
     text_out <- reactive({
       req(input$text_in)
-      
+
       pass <- input$text_in %in% c('a', 'b')
       
-      shinyFeedback::feedbackDanger("text_in", !pass, "Entry not found")
-      req(pass, cancelOutput = TRUE)
+      if (pass) {
+        shinyFeedback::hideFeedback('text_in')
+        shinyFeedback::showFeedbackSuccess('text_in', "Entry matched")
+        # input$text_in
+        `$`(input, 'text_in')
+      } else {
+        shinyFeedback::hideFeedback('text_in')
+        shinyFeedback::showFeedbackWarning('text_in', "Entry not found")
+      }
       
-      input$text_in
+      # switch_feedback('text_in',
+      #                 pass,
+      #                 "Entry matched",
+      #                 "Entry not found")
+
     })
-    
+
     output$text_out <- renderText({text_out()})
   }
   shinyApp(ui, server)  
 }
 
 textFeedbackApp()
+
+
+switch_feedback <- function(.input, .show, .pass_message, .fail_message){
+  # Switch beteen FeedbackSuccess and FeedbackDanger depending on
+  # the input.
+  
+  if (.show) {
+    shinyFeedback::hideFeedback(.inputID)
+    shinyFeedback::showFeedbackSuccess(.inputID, .pass_message)
+    # `$`(get('input', envir = rlang::caller_env(-2)), .inputID)
+    # `$`(.inputID, 'text_in')
+    .input
+  } else {
+    shinyFeedback::hideFeedback(.inputID)
+    shinyFeedback::showFeedbackDanger(.inputID, .fail_message)
+  }
+}
