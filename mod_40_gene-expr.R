@@ -4,7 +4,7 @@ calculationUI <- function(id) {
   tagList(
     shinyjs::useShinyjs(),
     shinyFeedback::useShinyFeedback(),
-
+    
     h3('Calculate Stuff'),
     selectInput(NS(id, 'housek'), 
                 'Select housekeeper:',
@@ -14,7 +14,6 @@ calculationUI <- function(id) {
     actionButton(NS(id, 'calculate'), 
                  'Calculate Relative Gene Expression', 
                  width = '300px'), br(),
-    actionButton(NS(id, 'b1'), 'fu'),
     disabled(
       downloadButton(NS(id, 'd_res_long'), 
                      'Download Results (long format)', 
@@ -35,30 +34,37 @@ calculationServer <- function(id, .dat) {
     
     # Update housekeeper selection
     observeEvent(.dat(), {
-      updateSelectInput(inputId = 'housek', choices = unique(.dat()$target))
+      updateSelectInput(inputId = 'housek', 
+                        choices = unique(.dat()$target))
     })
     
-    # Check and save control group
-    ctrl_grp <- reactive({
-      shinyFeedback::feedbackWarning('ctrl_grp', 
+    # Check whether ctrl_grp is in sample
+    ctrl_grp <- reactive(input$ctrl_grp)
+    pass <- reactive(sum(str_detect(.dat()$sample, input$ctrl_grp)) > 0)
+    
+    # Give feedback on ctrl_grp and toggle download
+    observeEvent(input$calculate, {
+      shinyFeedback::feedbackWarning('ctrl_grp',
                                      str_length(input$ctrl_grp) == 0, '-_-')
       req(!str_length(input$ctrl_grp) == 0, cancelOutput = TRUE)
       
-      pass <- sum(str_detect(.dat()$sample, input$ctrl_grp)) > 0
-      
-      if (pass) {
+      if (pass()) {
         shinyFeedback::hideFeedback('ctrl_grp')
         shinyFeedback::showFeedbackSuccess('ctrl_grp', "Entry matched")
-        input$ctrl_grp
+        shinyjs::enable('d_res_long')
+        shinyjs::enable('d_res_wide')
       } else {
         shinyFeedback::hideFeedback('ctrl_grp')
         shinyFeedback::showFeedbackWarning('ctrl_grp', "Entry not found")
+        shinyjs::disable('d_res_long')
+        shinyjs::disable('d_res_wide')
       }
+      
     })
     
     # Calculate gene expression
     rel_gene_expr <- eventReactive(input$calculate, {
-      req(ctrl_grp())
+      req(pass(), ctrl_grp())
       
       .dat() %>% 
         calc_dcq(input$housek) %>% 
@@ -99,34 +105,7 @@ calculationServer <- function(id, .dat) {
       }
     )
     
-    observeEvent(pass(), {
-      if (pass) {
-        enable('d_res_long')
-        enable('d_res_wide')
-      } else {
-          disable('d_res_long')
-          disable('d_res_wide')
-        }
-      }) 
-    
-    # observe({
-      # print(rel_gene_expr())
-      
-      # observeEvent( rel_gene_expr(), {
-      #   # shinyjs::toggleState('d_res_long')
-      #   # print(exists(rel_gene_expr()))
-      #   
-      #   shinyjs::toggleState('d_res_long')
-      # })
-      
-      # if (nrow(rel_gene_expr()) == 0) {
-      #   disable('d_res_long')
-      #   disable('d_res_wide')
-      # } else {
-      #   enable('d_res_long')
-      #   enable('d_res_wide')
-      # }
-    # })
+    return(rel_gene_expr)
     
   })
 }
