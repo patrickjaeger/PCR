@@ -2,6 +2,7 @@
 # check for mRNA contamination in the reagent mix. These blanks should 
 # be blank. Here the blanks are checked and removed from the main data.
 
+# TODO Add test for failed wells and remove them
 
 # Modules -----------------------------------------------------------------
 

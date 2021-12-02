@@ -8,10 +8,9 @@ extractTagsUI <- function(id) {
     textInput('tags', 
               'Enter names of tags to extract:', 
               placeholder = 'donor genotype sample'),
-    selectInput(NS(id, 'separator'), 'Separator', 
-                choices = c('underscore (tag1_tag2)',
-                            'space (tag1 tag2)',
-                            'hyphen (tag1-tag2)')),
+    orderInput('arrange_tags', 
+               'Arrange by:', 
+               items = c('B', 'A', 'N', 'A', 'N', 'A')),
     tableOutput('head_res2_long'),
     downloadButton('d_res2_long', 'Download Results (long format)'),
     downloadButton('d_res2_wide', 'Download Results (wide format)')
@@ -27,7 +26,7 @@ extractTagsServer <- function(id, .dat) {
 
 # Utils -------------------------------------------------------------------
 
-split_label <- function(.df, .col, .sep) {
+split_label <- function(.df, .col) {
   # Split character column containing n substrings separated by '_'
   # into n column named tag_1...tag_n
   # .df (dataframe): dataframe
@@ -36,7 +35,7 @@ split_label <- function(.df, .col, .sep) {
   tags <- 
     .df %>% 
     pluck(.col) %>% 
-    str_split(.sep) %>% 
+    str_split('_') %>% 
     tibble(tag = .) %>% 
     unnest_wider(tag, '_')
   

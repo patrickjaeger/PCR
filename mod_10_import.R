@@ -3,7 +3,7 @@
 # data import.
 # TODO Finish read_96() - cq is still character
 # TODO Add error message if file format is incompatible
-
+# TODO Validate correct readouts with someone more experienced with PCR
 
 # Modules -----------------------------------------------------------------
 
@@ -59,6 +59,18 @@ read_96 <- function(.fpath) {
     mutate(cq = as.character(cq))
 }
 
+# read_96 test ------------------------------------------------------------
+
+# .fpath <- 'data/210816_patrick_2d_stretch_n4.xls'
+# t1 <- readxl::read_xls(.fpath, skip = 7) %>% 
+#   slice(1:(nrow(.)-5)) %>% 
+#   select(Well, `Sample Name`, `Target Name`, `C<U+0442>`) %>% 
+#   rename(well = Well, sample = `Sample Name`, target = `Target Name`, 
+#          cq = `C<U+0442>`) %>%  
+#   mutate(cq = as.character(cq)) 
+# 
+# blank <- 'BLANK'
+# t1 %>% mutate(content = if)
 
 # TestApp -----------------------------------------------------------------
 
@@ -73,3 +85,9 @@ read_96 <- function(.fpath) {
 # }
 # 
 # importApp()
+
+
+# xlsx test ---------------------------------------------------------------
+
+# file.exists('data/Greta_150921_Mousecells_VHLKO -  Quantification Summary.xlsx')
+# readxl::read_xlsx('data/Greta_150921_Mousecells_VHLKO -  Quantification Summary.xlsx')
