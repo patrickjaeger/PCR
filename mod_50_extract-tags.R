@@ -11,7 +11,8 @@ extractTagsUI <- function(id) {
     selectInput(NS(id, 'separator'), 'Separator', 
                 choices = c('underscore (tag1_tag2)',
                             'space (tag1 tag2)',
-                            'hyphen (tag1-tag2)')),
+                            'hyphen (tag1-tag2)',
+                            'slash (tag1/tag2)')),
     tableOutput('head_res2_long'),
     downloadButton('d_res2_long', 'Download Results (long format)'),
     downloadButton('d_res2_wide', 'Download Results (wide format)')
