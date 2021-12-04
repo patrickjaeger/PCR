@@ -1,9 +1,31 @@
+# Info --------------------------------------------------------------------
+
 # Different PCR machines deliver different file formats and
 # formatting. Here the user selects his machine to ensure consistent
 # data import.
 
+# TODO Fix feedback for blank selection line ~50
+# TODO Add biological column(s)
 # TODO Check NA values in cq - then warn and remove them
 # TODO Validate correct readouts with someone more experienced with PCR
+
+
+# I/O ---------------------------------------------------------------------
+## Input
+# - CSV.files only; main table only (= without supple. info at the top/bottom)
+# - machines: StepOnePlus, xxx
+# - 
+
+## Output
+
+# dat_raw (tibble [n x 6])
+# - well (chr)
+# - target (chr)
+# - content (chr)
+# - biological (chr)
+# - sample (chr)
+# - cq (dbl)
+
 
 # Modules -----------------------------------------------------------------
 
@@ -67,10 +89,23 @@ importServer <- function(id) {
 
 read_384 <- function(.fpath) {
   # Read CSV containing Cq values from 384-well PCR machine
-  .fpath %>% 
-    read_csv() %>% 
-    select(Well, Target, Content, Sample, Cq) %>%
-    rename_with(tolower)
+  
+  dat <- read_csv(.fpath)
+  
+  exist_biological <- 'Biological Set Name' %in% names(dat)
+  
+  if (exist_biological) {
+    dat %>% 
+      select(Well, Target, Content, Sample, Cq, 
+             biological = `Biological Set Name`) %>%
+      rename_with(tolower)
+  } else {
+    dat %>% 
+      select(Well, Target, Content, Sample, Cq) %>%
+      rename_with(tolower) %>% 
+      mutate(biological = NA)
+  }
+  
 }
 
 read_96 <- function(.fpath, .blank) {
@@ -78,13 +113,21 @@ read_96 <- function(.fpath, .blank) {
   # must first be saved as .csv and the garbage must be deleted from the 
   # beginning and end.
   # .blank (chr): name given to blank wells
+  
   read_csv(.fpath) %>% 
     select(Well, `Sample Name`, `Target Name`, `C<U+0442>`) %>% 
     rename(well = Well, sample = `Sample Name`, target = `Target Name`, 
            cq = `C<U+0442>`) %>% 
-    mutate(cq = ifelse(cq == 'Undetermined', NA, cq) %>% as.numeric(),
-           content = if_else(sample == .blank, .blank, 'Unknown'))
+    mutate(
+      # Replace <Undetermined> with <NA> in cq
+      cq = ifelse(cq == 'Undetermined', NA, cq) %>% as.numeric(),
+      # Tag row containing samples and blanks in content
+      content = if_else(sample == .blank, .blank, 'Unknown'),
+      # Create dummy biologica column
+      biological = NA
+    )
 }
+
 
 # read_96 test ------------------------------------------------------------
 
