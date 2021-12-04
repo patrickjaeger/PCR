@@ -1,6 +1,7 @@
 library(tidyverse)
 library(shinyjqui)
 library(shinyjs)
+library(shinyFeedback)
 library(shiny)
 
 
