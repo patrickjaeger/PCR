@@ -4,7 +4,6 @@
 # formatting. Here the user selects his machine to ensure consistent
 # data import.
 
-# TODO Check NA values in cq - then warn and remove them
 # TODO Validate correct readouts with someone more experienced with PCR
 
 
@@ -60,7 +59,9 @@ importServer <- function(id) {
       switch (input$machine,
               `384-well beast` = read_384(input$file$datapath),
               `96-well old-school` = {
-                feedbackDanger('blank', !isTruthy(input$blank), 'Please enter blanks name.')
+                feedbackDanger('blank', 
+                               !isTruthy(input$blank), 
+                               'Please enter blanks name.')
                 req(input$blank)
                 read_96(input$file$datapath, input$blank)
                 }
@@ -84,8 +85,6 @@ importServer <- function(id) {
     
   })
 }
-
-
 
 
 # Utils -------------------------------------------------------------------
@@ -134,17 +133,17 @@ read_96 <- function(.fpath, .blank) {
 
 # TestApp -----------------------------------------------------------------
 
-importApp <- function() {
-  ui <- fluidPage(
-    importUI('file1'),
-    tableOutput('table1')
-  )
-  server <- function(input, output, session) {
-    dat_raw <- importServer('file1')
-    output$table1 <- renderTable(dat_raw())
-  }
-  shinyApp(ui, server)
-}
-
-importApp()
+# importApp <- function() {
+#   ui <- fluidPage(
+#     importUI('file1'),
+#     tableOutput('table1')
+#   )
+#   server <- function(input, output, session) {
+#     dat_raw <- importServer('file1')
+#     output$table1 <- renderTable(dat_raw())
+#   }
+#   shinyApp(ui, server)
+# }
+# 
+# importApp()
 

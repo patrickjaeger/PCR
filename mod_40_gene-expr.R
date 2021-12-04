@@ -76,11 +76,6 @@ calculationServer <- function(id, .dat) {
         calc_ddcq_and_fold_change(ctrl_grp())
     })
     
-    # Render head of results
-    output$head_res_long <- renderTable({
-      head(rel_gene_expr())
-    })
-    
     # Wide format results
     rel_gene_expr_wide <- reactive({
       req(rel_gene_expr())
@@ -88,6 +83,12 @@ calculationServer <- function(id, .dat) {
         select(target, sample, fold_change) %>% 
         pivot_wider(names_from = target, 
                     values_from = fold_change)
+    })
+    
+    # Render head of results
+    output$head_res_long <- renderTable({
+      head(rel_gene_expr())
+      rel_gene_expr_wide()
     })
     
     # Download long results

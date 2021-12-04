@@ -2,7 +2,6 @@
 # check for mRNA contamination in the reagent mix. These blanks should 
 # be blank. Here the blanks are checked and removed from the main data.
 
-# TODO Add test for failed wells and remove them
 
 # Modules -----------------------------------------------------------------
 
@@ -11,8 +10,8 @@ blanksUI <- function(id) {
     
     h3('Check Blanks'),
     textInput(NS(id, 'blank_tag'), 
-                 'Enter name of blanks:', 
-                 value = 'Neg Ctrl'),
+              'Enter name of blanks:', 
+              value = 'Neg Ctrl'),
     actionButton(NS(id, 'check_blanks'), 'Check blanks'),
     textOutput(NS(id, 'blanks_message')),
     tableOutput(NS(id, 'blanks_table'))
@@ -30,24 +29,26 @@ blanksServer <- function(id, .dat_raw) {
       filter(.dat_raw(), str_detect(content, input$blank_tag))
     })
     
-    # Check and save message
+    # Check and create message
     blanks_message <- eventReactive(input$check_blanks, {
       validate(need(nrow(blanks()) != 0, 
                     'Blanks not found. Correct the name!'))
       
-      if (sum(blanks()$cq, na.rm = TRUE) == 0) 
-        'Blanks are blank, continue.'
-      if (sum(blanks()$cq, na.rm = TRUE) > 0) 
+      if (sum(blanks()$cq, na.rm = TRUE) == 0) {
+        'Yay! All blanks are blank.'
+      } else {
         'Warning! One or more blanks are not blank.'
+      }
     })
     
-    # Save table of corrupt blanks, if detected
+    # Create table of corrupt blanks, if detected
     blanks_table <- eventReactive(input$check_blanks, {
-      validate(need(nrow(blanks()) != 0, ''))
+      req(nrow(na.omit(blanks())) > 0)
+      print(blanks())
       filter(blanks(), !is.na(cq))
-      })
+    })
     
-    # Return message and table of blanks
+    # Render message and table of blanks
     output$blanks_message <- renderText({blanks_message()})
     output$blanks_table <- renderTable(blanks_table())
     
