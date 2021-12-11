@@ -53,9 +53,9 @@ ui <- navbarPage(
 server <- function(input, output, session) {
   dat1 <- importServer('file1')
   dat2 <- blanksServer('blank1', dat1)
-  dat2.1 <- checkSamplesServer('samples1', dat2)
-  dat3 <- replicatesServer('rep1', dat2.1)
-  dat4 <- calculationServer('calc1', dat3)
+  # dat2.1 <- checkSamplesServer('samples1', dat2)
+  # dat3 <- replicatesServer('rep1', dat2.1)
+  # dat4 <- calculationServer('calc1', dat3)
   # observeEvent(dat3(), print('fu'))
   
 }

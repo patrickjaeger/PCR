@@ -24,13 +24,13 @@ blanksServer <- function(id, .dat_raw) {
   moduleServer(id, function(input, output, session) {
     
     # Filter rows with blanks
-    blanks <- reactive({
+    blanks <- eventReactive(input$check_blanks, {
       req(.dat_raw())
       filter(.dat_raw(), str_detect(content, input$blank_tag))
     })
     
     # Check and create message
-    blanks_message <- eventReactive(input$check_blanks, {
+    blanks_message <- reactive({
       validate(need(nrow(blanks()) != 0, 
                     'Blanks not found. Correct the name!'))
       
@@ -42,9 +42,8 @@ blanksServer <- function(id, .dat_raw) {
     })
     
     # Create table of corrupt blanks, if detected
-    blanks_table <- eventReactive(input$check_blanks, {
-      req(nrow(na.omit(blanks())) > 0)
-      print(blanks())
+    blanks_table <- reactive({
+      validate(need(nrow(filter(blanks(), !is.na(cq))) > 0, ''))
       filter(blanks(), !is.na(cq))
     })
     
@@ -53,7 +52,9 @@ blanksServer <- function(id, .dat_raw) {
     output$blanks_table <- renderTable(blanks_table())
     
     # Return dat_raw without the blanks
-    reactive(filter(.dat_raw(), !str_detect(content, input$blank_tag)))
+    observeEvent(input$check_blanks, 
+                 filter(.dat_raw(), 
+                        !str_detect(content, input$blank_tag)))
     
   })
 }
