@@ -4,8 +4,6 @@
 # formatting. Here the user selects his machine to ensure consistent
 # data import.
 
-# TODO Validate correct readouts with someone more experienced with PCR
-
 
 # I/O ---------------------------------------------------------------------
 ## Input
@@ -53,7 +51,7 @@ importServer <- function(id) {
     })
     
     # Read input file
-    dat_raw <- reactive({
+    dat_raw <- eventReactive(input$file, {
       req(input$file)
       
       switch (input$machine,
@@ -105,7 +103,7 @@ read_384 <- function(.fpath) {
     dat %>% 
       select(Well, Target, Content, Sample, Cq) %>%
       rename_with(tolower) %>% 
-      mutate(biological = NA)
+      mutate(biological = 'undefined')
   }
   
 }
@@ -126,7 +124,7 @@ read_96 <- function(.fpath, .blank) {
       # Tag row containing samples and blanks in content
       content = if_else(sample == .blank, .blank, 'Unknown'),
       # Create dummy biologica column
-      biological = NA
+      biological = 'undefined'
     )
 }
 

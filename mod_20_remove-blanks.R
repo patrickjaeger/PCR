@@ -52,7 +52,7 @@ blanksServer <- function(id, .dat_raw) {
     output$blanks_table <- renderTable(blanks_table())
     
     # Return dat_raw without the blanks
-    observeEvent(input$check_blanks, 
+    eventReactive(input$check_blanks, 
                  filter(.dat_raw(), 
                         !str_detect(content, input$blank_tag)))
     

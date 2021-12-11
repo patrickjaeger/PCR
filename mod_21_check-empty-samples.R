@@ -22,6 +22,7 @@ checkSamplesServer <- function(id, .dat) {
     empty_samples <- eventReactive(input$check_samples, {
       req(.dat())
       empty_samples <- filter(.dat(), is.na(cq))
+      
       list(
         table = empty_samples,
         message = ifelse(nrow(empty_samples) > 0,
@@ -41,7 +42,8 @@ checkSamplesServer <- function(id, .dat) {
       empty_samples()$table
     })
     
-    return(na.omit(.dat))
+    # Return data without empty samples
+    eventReactive(input$check_samples, na.omit(.dat()))
     
   })
 }

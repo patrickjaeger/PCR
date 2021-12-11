@@ -135,8 +135,8 @@ calc_dcq <- function(.df, .housek) {
     full_join(., housek_cqs) %>% 
     ungroup() %>% 
     mutate(dcq = mean_cq - mean_housek_cq) %>% 
-    select(-mean_housek_cq) %>% 
-    filter(target != .housek)
+    select(-mean_housek_cq)  #%>%
+    # filter(target != .housek)
 }
 
 

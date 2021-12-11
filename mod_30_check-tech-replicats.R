@@ -21,20 +21,20 @@ replicatesServer <- function(id, .dat, .thresh = 0.3) {
   moduleServer(id, function(input, output, session) {
     
     # Average Cq values
-    dat_avg <- reactive({
+    dat_avg <- eventReactive(input$check_replicates, {
       req(.dat())
-      .dat() %>%
-        select(-content) %>% 
-        group_by(target, sample) %>% 
+      .dat() %>% 
+        select(-content) %>%
+        group_by(target, sample) %>%
         summarise(mean_cq = mean(cq),
-                  sd_cq = sd(cq) %>% round(2), 
+                  sd_cq = sd(cq) %>% round(2),
                   .groups = 'drop')
     })
     
     ## Check SD of technical replicates and save message
-    high_sd_samples <- reactive(dat_avg() %>% filter(sd_cq > .thresh))
+    high_sd_samples <- reactive(filter(dat_avg(), sd_cq > .thresh))
     
-    replicates_message <- eventReactive(input$check_replicates, {
+    replicates_message <- reactive({
       if(nrow(high_sd_samples()) > 0) {
         'Attention! High variation between technical replicates detected.'
       } else {
@@ -44,12 +44,10 @@ replicatesServer <- function(id, .dat, .thresh = 0.3) {
     
     # Outputs
     output$replicates_message <- renderText({replicates_message()})
-    output$replicates_table <- renderTable({
-      req(replicates_message())
-      high_sd_samples()
-    })
+    output$replicates_table <- renderTable({high_sd_samples()})
     
-    return(dat_avg)
+    # Return dat_avg
+    reactive(dat_avg())
 
   })
 }
