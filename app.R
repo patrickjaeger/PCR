@@ -15,7 +15,14 @@ source('mod_40_gene-expr.R')
 # TODO --------------------------------------------------------------------
 
 # TODO App chrashes if input method is switched after some calculation 
-# have been made.
+# have been made
+# TODO Reset app when another dataset is loaded
+# TODO Average control group for calculations, e.g. average across WT in 
+# Greta's data
+# TODO Implement plotting
+# TODO Add multiple text inputs to &-filter for the control group
+# TODO Handle multiple entries in biological
+# TODO Check how/if the control group is averaged
 
 
 # UI ----------------------------------------------------------------------
